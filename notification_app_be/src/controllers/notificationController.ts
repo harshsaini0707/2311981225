@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { Prisma } from "@prisma/client";
 import { Log } from "logging_middleware";
 import { prisma } from "../lib/prisma";
 import { emitNewNotification } from "../socket";
@@ -130,7 +129,7 @@ export async function bulkNotify(req: Request, res: Response) {
     const { studentIds, message, type } = req.body as {
       studentIds: string[];
       message: string;
-      type: Prisma.NotificationType;
+      type: "Event" | "Result" | "Placement";
     };
 
     await prisma.$transaction(
