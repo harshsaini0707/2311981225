@@ -132,13 +132,9 @@ export async function bulkNotify(req: Request, res: Response) {
       type: "Event" | "Result" | "Placement";
     };
 
-    await prisma.$transaction(
-      studentIds.map((studentId) =>
-        prisma.notification.create({
-          data: { studentId, message, type },
-        })
-      )
-    );
+    await prisma.notification.createMany({
+      data: studentIds.map((studentId) => ({ studentId, message, type })),
+    });
 
     await enqueueBulkJobs(studentIds, message);
     void Log("backend", "INFO", "notificationController", `bulkNotify queued ${studentIds.length} jobs`);

@@ -1,7 +1,6 @@
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -15,23 +14,21 @@ enum NotificationType {
 }
 
 model Student {
-  id            String         @id @default(uuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   email         String         @unique
   createdAt     DateTime       @default(now())
-  notifications Notification[]
 }
 
 model Notification {
-  id        String           @id @default(uuid())
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
   studentId String
-  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   type      NotificationType
   message   String
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
 
-  @@index([studentId, isRead, createdAt(sort: Asc)])
+  @@index([studentId, isRead, createdAt])
   @@index([type])
-  @@index([createdAt(sort: Desc)])
+  @@index([createdAt])
 }
