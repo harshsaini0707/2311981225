@@ -2,7 +2,7 @@
 
 import { Log } from "logging_middleware";
 
-const BASE_URL = "http://localhost:4000/api/notifications";
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api/notifications";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   try {

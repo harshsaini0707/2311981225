@@ -2,36 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Avatar,
   Box,
   Button,
-  Chip,
   Container,
   FormControl,
   InputLabel,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
   MenuItem,
   Select,
   Slider,
   Typography,
 } from "@mui/material";
+import PriorityList, { PriorityItem } from "@/components/PriorityList";
 import { fetchPriorityNotifications } from "@/lib/api";
-
-interface PriorityItem {
-  ID: string;
-  Type: "Placement" | "Result" | "Event";
-  Message: string;
-  Timestamp: string;
-}
-
-const typeColor: Record<PriorityItem["Type"], "success" | "info" | "warning"> = {
-  Placement: "success",
-  Result: "info",
-  Event: "warning",
-};
 
 export default function PriorityPage() {
   const [topN, setTopN] = useState<number>(10);
@@ -90,17 +72,7 @@ export default function PriorityPage() {
         </Button>
       </Box>
 
-      <List>
-        {visibleItems.map((item, idx) => (
-          <ListItem key={item.ID} divider>
-            <ListItemAvatar>
-              <Avatar>#{idx + 1}</Avatar>
-            </ListItemAvatar>
-            <ListItemText primary={item.Message} secondary={new Date(item.Timestamp).toLocaleString()} />
-            <Chip color={typeColor[item.Type]} label={item.Type} />
-          </ListItem>
-        ))}
-      </List>
+      <PriorityList items={visibleItems} />
     </Container>
   );
 }

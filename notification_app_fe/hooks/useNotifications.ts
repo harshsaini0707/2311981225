@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { fetchNotifications, markAllRead, markRead } from "@/lib/api";
-import { markAsRead } from "@/lib/readStore";
+import { getReadIds, markAsRead } from "@/lib/readStore";
 import { useSocket } from "./useSocket";
+
+type NotificationFilter = "All" | "Placement" | "Result" | "Event";
 
 export interface UINotification {
   id: string;
@@ -35,8 +37,9 @@ export function useNotifications() {
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(20);
   const [total, setTotal] = useState<number>(0);
-  const [filterType, setFilterType] = useState<"All" | "Placement" | "Result" | "Event">("All");
+  const [filterType, setFilterType] = useState<NotificationFilter>("All");
   const { newNotification } = useSocket<UINotification>();
+  const studentId = process.env.NEXT_PUBLIC_STUDENT_ID ?? "";
 
   async function loadData(nextPage = page, nextType = filterType) {
     try {
@@ -70,13 +73,16 @@ export function useNotifications() {
     setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item } : item)));
   }
 
-  async function onMarkAllRead(studentId: string) {
+  async function onMarkAllRead() {
+    if (!studentId) {
+      return;
+    }
     await markAllRead(studentId);
     notifications.forEach((item) => markAsRead(item.id));
     setNotifications((prev) => [...prev]);
   }
 
-  function setFilter(type: "All" | "Placement" | "Result" | "Event") {
+  function setFilter(type: NotificationFilter) {
     setPage(1);
     setFilterType(type);
   }
@@ -86,7 +92,10 @@ export function useNotifications() {
     await loadData(nextPage, filterType);
   }
 
-  const unreadCount = useMemo(() => notifications.length, [notifications]);
+  const unreadCount = useMemo(
+    () => notifications.filter((item) => !getReadIds().has(item.id)).length,
+    [notifications]
+  );
 
   return {
     notifications,
