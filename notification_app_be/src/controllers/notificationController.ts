@@ -11,11 +11,16 @@ function parseIntOrDefault(value: string | undefined, fallback: number): number 
   return Number.isNaN(parsed) ? fallback : parsed;
 }
 
+function clampExternalLimit(limit: number): number {
+  return Math.max(5, Math.min(10, limit));
+}
+
 export async function fetchAll(req: Request, res: Response) {
   void Log("backend", "INFO", "notificationController", "fetchAll entered");
   try {
     const page = parseIntOrDefault(req.query.page as string, 1);
-    const limit = parseIntOrDefault(req.query.limit as string, 20);
+    const requestedLimit = parseIntOrDefault(req.query.limit as string, 10);
+    const limit = clampExternalLimit(requestedLimit);
     const notification_type = req.query.notification_type as "Event" | "Result" | "Placement" | undefined;
     const data = await fetchNotifications({ page, limit, notification_type });
     void Log("backend", "INFO", "notificationController", "fetchAll success");
@@ -110,10 +115,14 @@ export async function getPriority(req: Request, res: Response) {
   void Log("backend", "INFO", "notificationController", "getPriority entered");
   try {
     const n = parseIntOrDefault(req.query.n as string, 10);
-    const page = 1;
-    const limit = 200;
-    const response = await fetchNotifications({ page, limit });
-    const notifications = response.notifications ?? [];
+    const pageSize = 10;
+    const pagesNeeded = Math.max(1, Math.ceil(n / pageSize));
+    const batches = await Promise.all(
+      Array.from({ length: pagesNeeded }, (_, idx) =>
+        fetchNotifications({ page: idx + 1, limit: pageSize })
+      )
+    );
+    const notifications = batches.flatMap((batch) => batch.notifications ?? []);
     const ranked = getTopN(notifications, n);
     void Log("backend", "INFO", "notificationController", "getPriority success");
     return res.status(200).json({ success: true, data: { notifications: ranked, n } });
