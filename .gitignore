@@ -8,3 +8,4 @@ coverage/
 *.log
 stage6_output_screenshots/*.png
 implementationPlan.md
+git branch -M main
